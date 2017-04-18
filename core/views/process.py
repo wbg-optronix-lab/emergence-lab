@@ -157,7 +157,6 @@ class RunProcessView(LoginRequiredMixin, generic.CreateView):
 
     def get_form_kwargs(self):
         kwargs = super(RunProcessView, self).get_form_kwargs()
-        # kwargs['user'] = self.request.user
         kwargs['process_type'] = self.process_type
         return kwargs
 
@@ -398,8 +397,7 @@ class ProcessTypeUpdateView(LoginRequiredMixin, generic.UpdateView):
     template_name = 'core/processtype_edit.html'
     context_object_name = 'processtype'
     slug_field = 'type'
-    fields = ('name', 'full_name', 'description', 'category', 'scheduling_type',
-              'creation_type')
+    form_class = ProcessTypeForm
 
     def get_success_url(self):
         return reverse('processtype_detail', args=(self.object.type,))

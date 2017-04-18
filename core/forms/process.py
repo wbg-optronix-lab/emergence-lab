@@ -12,6 +12,7 @@ from crispy_forms import helper, layout
 from datetimewidget.widgets import DateWidget
 
 from core.models import DataFile, Process, ProcessTemplate, ProcessType
+from core.configuration.forms import ConfigurationChoiceField
 
 
 class DropzoneForm(forms.ModelForm):
@@ -32,7 +33,8 @@ class ProcessCreateForm(forms.ModelForm):
         if process_type != 'generic-process':
             self.fields['type'].widget = forms.HiddenInput()
         else:
-            self.fields['type'].queryset = ProcessType.objects.exclude(creation_type='custom')
+            self.fields['type'].queryset = ProcessType.objects.exclude(
+                configuration__core_creation_type='custom')
 
         self.fields['milestones'] = forms.MultipleChoiceField(required=False, choices=[
             ('{} - {}'.format(i.project.name, i.name), [
@@ -88,7 +90,8 @@ class WizardBasicInfoForm(forms.ModelForm):
             (p.name, [(i.id, i.name) for i in p.investigations.all()])
             for p in user.get_projects('member') if p.investigations.exists()
         ])
-        self.fields['type'].queryset = ProcessType.objects.exclude(creation_type='custom')
+        self.fields['type'].queryset = ProcessType.objects.exclude(
+            configuration__core_creation_type='custom')
         self.helper = helper.FormHelper()
         self.helper.form_tag = False
         self.helper.disable_csrf = True
@@ -140,14 +143,30 @@ class ProcessTypeForm(forms.ModelForm):
                             label='Unique Identifier',
                             widget=forms.TextInput(
                                 attrs={'placeholder': 'Use lowercase letters and hyphens only'}))
+    scheduling_type = ConfigurationChoiceField(
+        key='core_scheduling_type',
+        label='How is this process scheduled?',)
+    creation_type = ConfigurationChoiceField(
+        key='core_creation_type',
+        label='Does this process need custom handling for creation?',)
 
     class Meta:
         model = ProcessType
         fields = ('type', 'name', 'full_name', 'description', 'category',
                   'is_destructive', 'scheduling_type', 'creation_type')
+        configuration_fields = ('scheduling_type', 'creation_type',)
         labels = {
             'name': 'Short Name or Abbreviation',
             'full_name': 'Full Name',
             'is_destructive': 'Does this process type alter the sample properties?',
-            'creation_type': 'Does this process need custom handling for creation?'
         }
+
+    def save(self, commit=True):
+        """Save the configuration options to the model."""
+        for field in self.Meta.configuration_fields:
+            key = self.fields[field].key
+            self.instance.configuration[key] = self.cleaned_data[field]
+
+        if commit:
+            self.instance.save()
+        return self.instance

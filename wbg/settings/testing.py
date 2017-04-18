@@ -15,15 +15,6 @@ AUTHENTICATION_BACKENDS = (
 )
 
 
-# Database
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-    }
-}
-
-
 # Password hashing
 
 PASSWORD_MANAGER = ('django.contrib.auth.hashers.MD5PasswordHasher',)
@@ -45,6 +36,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, os.pardir, 'media')
 # Test-only models
 INSTALLED_APPS += (
     'core.tests',
+    'core.configuration.tests',
 )
 
 REDIS_DB = 1

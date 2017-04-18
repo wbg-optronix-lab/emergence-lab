@@ -725,6 +725,7 @@ class TestProcessTypeCRUD(TestCase):
         processtype = mommy.make(ProcessType, type='test', category=processcategory)
         url = reverse('processtype_edit', args=(processtype.type,))
         data = {
+            'type': processtype.type,
             'name': processtype.name,
             'full_name': processtype.full_name,
             'description': 'testing',
